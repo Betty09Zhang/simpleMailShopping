@@ -44,3 +44,23 @@ export function throttle(fn, wait) {
   }
 
 }
+
+/**
+ * 
+ * @param {节流函数 ，可以传参} fn 
+ * @param {*} delay 
+ * @returns 
+ */
+export function throtte(fn, delay) {
+  let timer
+  return function () {
+    let _this = this
+    let args = arguments
+    if (!timer) {
+      timer = setTimeout(() => {
+        fn.apply(_this, args)
+        clearTimeout(timer)
+      }, delay)
+    }
+  }  
+}

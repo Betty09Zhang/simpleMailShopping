@@ -43,9 +43,9 @@
             <ul class="rec_goods_list clearfix">
                 <li v-for="item in recommandGoods" :key="item.productId" @click="$router.push({path:'/productDetail',query:{id:item.productId}})">
                     <a  class="redirect_URL" style="text-decoration: none;color:#475669">
-                        <img :src="item.productImg | prefix" alt="">
-                        <span>{{item.productId}}</span>
-                        <div class="product_info">{{item.productName}}</div>
+                        <img src="" alt="" :data-src="item.imgUrl" class="imgRecommands" v-lazy>
+                        <span>{{item.categoryId}}</span>
+                        <div class="product_info">{{item.name}}</div>
                         <div class="product_price">${{item.productPrice}}</div>
                     </a>
                 </li>
@@ -61,8 +61,8 @@
 
 <script>
 import axios from '../../utils/axios'
-import { getCategoryList } from '../../service/home'
-// import {prefix} from '../../utils/utils'
+// import { getCategoryList } from '../../service/home'
+// import {throttle} from '../../utils/utils'
 // import NavLeft from './NavLeft.vue'
 export default {
  name: 'Content',
@@ -132,25 +132,78 @@ export default {
 
     }
  },
- async mounted() {
+ mounted() {
     // const {data:{data}} = await getReCommands()
-    const _this = this
-    const resp = await getCategoryList()
-    if (resp.status == 200) {
-        this.categories = resp.data
-        this.splitCategoriesByLevel(resp.data) 
-    }
-    console.log('resp； ',resp);
-    console.log('this： ', this)
-    const { data:{data, meta}}  = await this.getGoodsList(this.pageSize,this.pageCur)
-    this.loading = false
-    this.recommandGoods = data
-    this.total = meta.total
-    this.pageNum = Math.ceil(this.total / this.pageSize)
+    // const _this = this
+    // const resp = await getCategoryList()
+    // if (resp.status == 200) {
+    //     this.categories = resp.data
+    //     this.splitCategoriesByLevel(resp.data) 
+    // }
+    // console.log('resp； ',resp);
+    // console.log('this： ', this)
+    // const { data: { data, meta }}  = await this.getGoodsList(this.pageSize,this.pageCur)
+    // this.loading = false
+    // this.recommandGoods = data
+    // this.total = meta.total
+    // this.pageNum = Math.ceil(this.total / this.pageSize)
 
-   
-    window.addEventListener('scroll',_this.scrollAndLoading.bind(_this), false)
-   
+    this.recommandGoods = [
+        {
+                name: '新蜂超市',
+                imgUrl: '/image/1.jpeg',
+                categoryId: 100001
+            }, {
+                name: '新蜂服饰',
+                imgUrl: '/image/2.jpeg',
+                categoryId: 100003
+            }, {
+                name: '全球购',
+                imgUrl: '/image/3.jpeg',
+                categoryId: 100002
+            }, {
+                name: '新蜂生鲜',
+                imgUrl: 'image/4.jpeg',
+                categoryId: 100004
+            }, {
+                name: '新蜂到家',
+                imgUrl: '/image/5.jpeg',
+                categoryId: 100005
+            }, {
+                name: '充值缴费',
+                imgUrl: '/image/6.jpeg',
+                categoryId: 100006
+            }, {
+                name: '9.9元拼',
+                imgUrl: '/image/7.jpeg',
+                categoryId: 100007
+            }, {
+                name: '领劵',
+                imgUrl: '/image/8.jpeg',
+                categoryId: 100008
+            }, {
+                name: '省钱',
+                imgUrl: '/image/9.jpeg',
+                categoryId: 100009
+            }, {
+                name: '全部',
+                imgUrl: '/image/10.jpeg',
+                categoryId: 100010
+            }
+    ]
+
+    /**
+     * 监听当前窗口滚动条的滚动事件
+     */
+    // const _this = this
+    // document.addEventListener('scroll', throttle(_this.loadingImg.bind(this
+    // ), 200), false)
+    /**
+     * 利用IntersectionObserver 观察目标进入视口，替换src
+     */
+    // this.$nextTick(() => {
+    //     this.intersectionObserver()
+    // })  
  },
  computed: {
     filterData() {
@@ -162,6 +215,44 @@ export default {
 
  //方法集合
  methods: {
+    intersectionObserver () {
+        const imgs = document.querySelectorAll('.imgRecommands')
+      
+        var observer = new IntersectionObserver(function(entries) {
+            if (entries[0].intersectionRatio <= 0) return;
+            entries.forEach((entry) => {
+                let lazyImage = entry.target;
+                // 相交率，默认是相对于浏览器视窗
+                if (entry.intersectionRatio > 0) {
+                    lazyImage.src = lazyImage.getAttribute('data-src');
+                    // 当前图片加载完之后需要去掉监听
+                    observer.unobserve(lazyImage);
+                }
+            })
+            // loadItems(10);
+            console.log('Loaded new items');
+        })
+
+        imgs.forEach(img => {
+            observer.observe(img)
+        })  
+    },
+    viewport (el) {
+        const viewHeight = document.documentElement.clientHeight
+        // const viewHeight = view.clientHeight
+       const re = el.getBoundingClientRect()
+        if (re.top <= viewHeight ) {
+            el.src = el.getAttribute('data-src')
+
+        }
+    },
+    loadingImg () {
+        const _this = this
+        const imgArr = document.querySelectorAll('.imgRecommands')
+        imgArr.forEach(function(ele){
+            _this.viewport(ele)
+        })
+    },
     async getGoodsList(pageSize, pageNumber) {
         return await axios.get('/product/findByPagination', {
             params: {
@@ -438,7 +529,7 @@ export default {
         // width: 100%;
         // height: 100%;
         // display: flex;
-        // position: relative;
+        position: relative;
         justify-content: flex-start;
         flex-wrap: wrap;
         margin: 10px 10px;
@@ -447,8 +538,8 @@ export default {
             display: inline-block;
             margin: 0;
             
-    padding: 0px;
-    vertical-align: baseline;
+            padding: 0px;
+            vertical-align: baseline;
             li {
                 width: 50%;
                 display: inline-block;
@@ -492,6 +583,11 @@ export default {
             visibility:hidden;
         }
         zoom: 1;
+    }
+    .imgRecommands {
+        width: 200px;
+        height: 200px;
+        display: block;
     }
 }
 </style>
